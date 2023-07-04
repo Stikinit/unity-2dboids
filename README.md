@@ -8,5 +8,5 @@ For example, there are two methods of execution:
 - **ComputeShader**: each boid's movement is calculated using a ComputeShader
 
 ## References
-- [Boids Pseudocode Article]("https://vergenet.net/~conrad/boids/pseudocode.html").
-- [Sebastian Lague's Boid Video]("https://youtu.be/bqtqltqcQhw").
+- [Boids Pseudocode Article](https://vergenet.net/~conrad/boids/pseudocode.html).
+- [Sebastian Lague's Boid Video](https://youtu.be/bqtqltqcQhw).
