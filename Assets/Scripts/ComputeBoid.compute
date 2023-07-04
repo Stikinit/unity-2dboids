@@ -1,0 +1,65 @@
+#pragma kernel CSMain
+static const int threadGroupSize = 1024;
+
+// This Compute shader calculates the movement 
+// vectors of each boid with the same algorithms used in 
+// the standard BoidManager class.
+// The final normalilzation of the vectors happens outside of this shader.
+
+struct Boid {
+    float2 position;
+    float2 velocity;
+    float2 comVector;
+    float2 avoidanceVector;
+    float2 alignmentVector;
+    int numFlockmates;
+};
+
+RWStructuredBuffer<Boid> boids;
+int numBoids;
+float viewRadius;
+float avoidRadius;
+
+[numthreads(threadGroupSize,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    for (int indexB = 0; indexB < numBoids; indexB ++) {
+        if (id.x != indexB) {
+            Boid boidB = boids[indexB];
+            float2 offset = boidB.position - boids[id.x].position;      // Vector between the reference boid and a different one
+            float sqrDst = offset.x * offset.x + offset.y * offset.y;   // Distance
+
+            if (sqrDst <= viewRadius * viewRadius) {
+                boids[id.x].numFlockmates += 1;
+
+                // BEGIN POPULATING RULE VECTORS
+                if (sqrDst < avoidRadius * avoidRadius) {
+                    boids[id.x].avoidanceVector -= offset;
+                }
+                boids[id.x].alignmentVector += boidB.velocity;
+                boids[id.x].comVector += boidB.position;
+            }
+        }
+    }
+
+    //  AVOIDANCE
+    boids[id.x].avoidanceVector = boids[id.x].avoidanceVector;
+
+    //ALIGNMENT
+    if (boids[id.x].numFlockmates != 0) {
+        boids[id.x].alignmentVector /= boids[id.x].numFlockmates;
+    }
+    else {
+        boids[id.x].alignmentVector = boids[id.x].velocity;
+    }
+    boids[id.x].alignmentVector = boids[id.x].alignmentVector - boids[id.x].velocity;
+
+    //COHESION
+    if (boids[id.x].numFlockmates != 0) {
+        boids[id.x].comVector /= boids[id.x].numFlockmates;
+    }
+    else {
+        boids[id.x].comVector = boids[id.x].position;
+    }
+    boids[id.x].comVector = boids[id.x].comVector - boids[id.x].position;
+}
